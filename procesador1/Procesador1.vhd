@@ -16,7 +16,7 @@ architecture Behavioral of Procesador1 is
 --##################################################
 	COMPONENT pc
 	PORT(
-		pcaddres : IN std_logic_vector(31 downto 0);
+		address : IN std_logic_vector(31 downto 0);
 		rst : IN std_logic;
 		clk : IN std_logic;          
 		pcout : OUT std_logic_vector(31 downto 0)
@@ -84,7 +84,7 @@ architecture Behavioral of Procesador1 is
 	
 ----------------------------------------------------------------------------------
 signal aux: std_logic_vector(31 downto 0):="00000000000000000000000000000001";
-
+signal C_s: std_logic_vector(31 downto 0);
 signal npc_out: STD_LOGIC_VECTOR (31 downto 0);
 signal c_out: STD_LOGIC_VECTOR (31 downto 0);
 signal pc_out_s: STD_LOGIC_VECTOR (31 downto 0);
@@ -106,21 +106,21 @@ signal MUX_s: STD_LOGIC_VECTOR(31 downto 0);
 begin
 -- instanciando el pc
 
-sumador: sumador PORT MAP(
+adder: sumador PORT MAP(
 								a => aux,
 								b => npc_out,
 								c => c_out
 								);
 			
-npc: npc port map(
-								pcaddress => C_s,
+npc: pc port map(
+								address => c_out,
 								rst => RST_D,
 								clk => CLK_D,
 								pcout => npc_out
 								);
 								
-pc: pc port map(
-								pcaddress => npc_out,
+pc0: pc port map(
+								address => npc_out,
 								rst => RST_D,
 								clk => CLK_D,
 								pcout => pc_out_s
@@ -132,7 +132,7 @@ im: instructionMemory PORT MAP(
 								outInstruction => outIM_s
 								);
 								
-seu: seu port map(
+seu0: seu port map(
 								imm13 => outIM_s(12 downto 0),
 								out_seu => SEU_s
 								);
@@ -155,14 +155,14 @@ rf: register_file PORT MAP(
 								);
 
 
-mux: mux PORT MAP(
+mux0: mux PORT MAP(
 								crs2 => CRS2_s,
-								se_out => SEU_s,
+								seu_out => SEU_s,
 								i => outIM_s(13),
 								mux_out => MUX_s
 								);
 
-alu: alu PORT MAP(
+alu0: alu PORT MAP(
 								A => CRS1_s,
 								B => MUX_s,
 								OP => UC_s,

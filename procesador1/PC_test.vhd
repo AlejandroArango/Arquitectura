@@ -64,7 +64,7 @@ BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: pc PORT MAP (
-          pcadder => pcadder,
+          address => address,
           rst => rst,
           clk => clk,
           pcout => pcout
@@ -83,15 +83,15 @@ BEGIN
    -- Stimulus process
    stim_proc: process
    begin		
-      pcadder<="00000000000000000000000000000000";
+      address<="00000000000000000000000000000000";
       wait for 100 ns;	
-		pcadder<="00000000000000000000000000000100";
+		address<="00000000000000000000000000000100";
       wait for 100 ns;	
-		pcadder<="00000000000000000000000000001000";
+		address<="00000000000000000000000000001000";
       wait for 100 ns;	
-		pcadder<="00000000000000000000000000001100";
+		address<="00000000000000000000000000001100";
       wait for 100 ns;	
-		pcadder<="00000000000000000000000000010000";
+		address<="00000000000000000000000000010000";
       wait for 100 ns;	
 		rst<='1';
 		

@@ -16,7 +16,7 @@ begin
 	PROCESS (rst,clk) IS
 		BEGIN 	
 	if rst = '1' then
-		pc_out <= x"00000000";
+		pcout <= x"00000000";
 	
 	else
 		if rising_edge(clk)then

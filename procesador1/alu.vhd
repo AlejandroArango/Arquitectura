@@ -27,17 +27,17 @@ begin
 			case (op) is
 				when "000000" => ---ADD
 					result <= a + b;
-				when "000100" => ---SUB
+				when "000001" => ---SUB
 					result <= a - b;
-				when "000001" =>---AND
+				when "000010" =>---AND
 					result <= a and b;
-				when "000101" =>---ANDN
+				when "000011" =>---ANDN
 					result <= a nand b;
-				when "000010" =>--- OR
+				when "000100" =>--- OR
 					result <= a or b;
-				when "000110" => ---ORN
+				when "000101" => ---ORN
 					result <= a nor b; 
-				when "000011" => ---XOR
+				when "000110" => ---XOR
 					result <= a xor b;
 				when "000111" => ---XORN
 					result <= a xnor b;

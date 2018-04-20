@@ -32,11 +32,11 @@ begin
 				when "000010" =>---AND
 					result <= a and b;
 				when "000011" =>---ANDN
-					result <= a nand b;
+					result <= a and not b;
 				when "000100" =>--- OR
 					result <= a or b;
 				when "000101" => ---ORN
-					result <= a nor b; 
+					result <= a or not b; 
 				when "000110" => ---XOR
 					result <= a xor b;
 				when "000111" => ---XORN

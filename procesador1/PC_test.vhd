@@ -41,7 +41,7 @@ ARCHITECTURE behavior OF PC_test IS
  
     COMPONENT pc
     PORT(
-         pcadder : IN  std_logic_vector(31 downto 0);
+         address : IN  std_logic_vector(31 downto 0);
          rst : IN  std_logic;
          clk : IN  std_logic;
          pcout : OUT  std_logic_vector(31 downto 0)
@@ -50,7 +50,7 @@ ARCHITECTURE behavior OF PC_test IS
     
 
    --Inputs
-   signal pcadder : std_logic_vector(31 downto 0) := (others => '0');
+   signal address : std_logic_vector(31 downto 0) := (others => '0');
    signal rst : std_logic := '0';
    signal clk : std_logic := '0';
 

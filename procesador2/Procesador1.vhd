@@ -56,9 +56,9 @@ architecture Behavioral of Procesador1 is
 --##################################################
 	COMPONENT register_file
 	PORT(
-		RS1 : IN std_logic_vector(4 downto 0);
-		RS2 : IN std_logic_vector(4 downto 0);
-		RD : IN std_logic_vector(4 downto 0);
+		RS1 : IN std_logic_vector(5 downto 0);
+		RS2 : IN std_logic_vector(5 downto 0);
+		RD : IN std_logic_vector(5 downto 0);
 		DWR : IN std_logic_vector(31 downto 0);
 		RST : IN std_logic;          
 		CRS1 : OUT std_logic_vector(31 downto 0);
@@ -75,12 +75,58 @@ architecture Behavioral of Procesador1 is
 	
 	COMPONENT alu
 	PORT(
-		a : IN std_logic_vector(31 downto 0);
-		b : IN std_logic_vector(31 downto 0);
-		op : IN std_logic_vector(5 downto 0);          
+		op1 : IN std_logic_vector(31 downto 0);
+		op2 : IN std_logic_vector(31 downto 0);
+		aluop : IN std_logic_vector(5 downto 0);
+		c : in std_logic; 
 		result : OUT std_logic_vector(31 downto 0)
 		);
 	END COMPONENT;
+
+--------------------procesador 2	----------------------------
+	
+	component windowsManager 
+   Port ( 
+	 
+			  rs1 : in  STD_LOGIC_VECTOR (4 downto 0);
+           rs2 : in  STD_LOGIC_VECTOR (4 downto 0);
+           rd : in  STD_LOGIC_VECTOR (4 downto 0);
+           op : in  STD_LOGIC_VECTOR (1 downto 0);
+           op3 : in  STD_LOGIC_VECTOR (5 downto 0);
+			  
+           cwp : in  STD_LOGIC;
+			  
+		     ncwp: out std_logic;
+           nrs1 : out  STD_LOGIC_VECTOR (5 downto 0);
+           nrs2 : out  STD_LOGIC_VECTOR (5 downto 0);
+           nrd : out  STD_LOGIC_VECTOR (5 downto 0));
+			  
+end component;	
+	
+	
+component Psr
+    Port ( 
+			  clk : in  STD_LOGIC;
+           rst : in  STD_LOGIC;
+           nzvc : in  STD_LOGIC_VECTOR (3 downto 0);
+           ncwp : in  STD_LOGIC;
+			  
+           cwp : out  STD_LOGIC;
+           c : out  STD_LOGIC);
+			  
+end component;	
+	
+
+component PsrModifier 
+    Port ( 
+			  rst : in  STD_LOGIC;
+           crs1 : in  STD_LOGIC_VECTOR (31 downto 0);
+           outMux : in  STD_LOGIC_VECTOR (31 downto 0);
+           aluop : in  STD_LOGIC_VECTOR (5 downto 0);
+           result : in  STD_LOGIC_VECTOR (31 downto 0);
+           nzvc : out  STD_LOGIC_VECTOR (3 downto 0));
+			  
+end component;	
 	
 ----------------------------------------------------------------------------------
 signal aux: std_logic_vector(31 downto 0):="00000000000000000000000000000001";
@@ -88,9 +134,9 @@ signal C_s: std_logic_vector(31 downto 0);
 signal npc_out: STD_LOGIC_VECTOR (31 downto 0);
 signal c_out: STD_LOGIC_VECTOR (31 downto 0);
 signal pc_out_s: STD_LOGIC_VECTOR (31 downto 0);
-
+-----------------
 signal outIM_s: STD_LOGIC_VECTOR (31 downto 0); --- base de todo
-
+-----------------
 signal SEU_s: STD_LOGIC_VECTOR(31 downto 0);
 signal UC_s: STD_LOGIC_VECTOR(5 downto 0);
 
@@ -102,10 +148,65 @@ signal RESULT_s: STD_LOGIC_VECTOR(31 downto 0);
 signal MUX_s: STD_LOGIC_VECTOR(31 downto 0);
 
 ----------------------------------------------------------------------------------
+--procesador 2
+
+signal señalnrs1: std_logic_vector(5 downto 0);
+signal señalnrs2: std_logic_vector(5 downto 0);
+signal señalnrd:  std_logic_vector(5 downto 0);
+
+signal señalcwp:   std_logic;
+signal señalncwp:  std_logic;
+
+signal señalc: std_logic;
+
+signal señalnzvc : STD_LOGIC_VECTOR(3 downto 0);
+
+----------------------------------------------------------------------------------
 
 begin
--- instanciando el pc
+-- instanciando el pc 2
+ventanero: windowsManager PORT MAP(
+												rs1 => outIM_s (18 downto 14),
+												rs2 => outIM_s ( 4 downto  0),
+												rd  => outIM_s (29 downto 25),
+												op  => outIM_s (31 downto 30),
+												op3 => outIM_s (24 downto 19),
+												
+												cwp => señalcwp,
+												
+												ncwp =>señalncwp,
+												nrs1 =>señalnrs1,
+												nrs2 =>señalnrs2,
+												nrd  =>señalnrd
+												);
 
+processorStateRegister: Psr port map (
+
+			  clk => CLK_D,
+           rst => RST_D,
+           nzvc => señalnzvc,
+           ncwp => señalncwp,
+			  
+           cwp => señalcwp,
+           c => señalc
+			  
+			  );
+
+processorStateRegisterModifier: PsrModifier port map (
+
+			  rst => RST_D,
+			  
+           crs1 => CRS1_s,
+           outMux => MUX_s,
+           aluop => UC_s,
+           result => RESULT_s,
+			  
+           nzvc => señalnzvc
+			  );
+
+
+
+-- instanciando el pc
 adder: sumador PORT MAP(
 								a => aux,
 								b => npc_out,
@@ -145,9 +246,10 @@ uc: unidadControl PORT MAP(
 								);
 
 rf: register_file PORT MAP(
-								RS1 => outIM_s(18 downto 14),
-								RS2 => outIM_s(4 downto 0),
-								RD => outIM_s(29 downto 25),
+								RS1 => señalnrs1,
+								RS2 => señalnrs2,
+								RD =>  señalnrd,
+								
 								DWR => RESULT_s,
 								RST => RST_D,
 								CRS1 => CRS1_s,
@@ -163,10 +265,11 @@ mux0: mux PORT MAP(
 								);
 
 alu0: alu PORT MAP(
-								A => CRS1_s,
-								B => MUX_s,
-								OP => UC_s,
-								RESULT => RESULT_s
+								op1 => CRS1_s,
+								op2 => MUX_s,
+								aluop => UC_s,
+								RESULT => RESULT_s,
+								c => señalc
 								);
 
 Procesador1_out <= RESULT_s;

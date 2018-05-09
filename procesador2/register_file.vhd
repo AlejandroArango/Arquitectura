@@ -4,11 +4,12 @@ use IEEE.numeric_std.all;
 use IEEE.std_logic_unsigned.all;
 
 entity register_file is
-    Port ( RS1 : in  STD_LOGIC_VECTOR (4 downto 0);
-           RS2 : in  STD_LOGIC_VECTOR (4 downto 0);
-           RD : in  STD_LOGIC_VECTOR (4 downto 0);
-           DWR : in  STD_LOGIC_VECTOR (31 downto 0);
-		   RST : in STD_LOGIC;
+    Port ( RS1 : in  STD_LOGIC_VECTOR (5 downto 0);
+           RS2 : in  STD_LOGIC_VECTOR (5 downto 0);
+           RD  : in  STD_LOGIC_VECTOR (5 downto 0);
+			  
+           DWR  : in  STD_LOGIC_VECTOR (31 downto 0);
+		     RST  : in STD_LOGIC;
            CRS1 : out  STD_LOGIC_VECTOR (31 downto 0);
            CRS2 : out  STD_LOGIC_VECTOR (31 downto 0));
 end register_file;

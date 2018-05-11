@@ -36,8 +36,8 @@ begin
 			when "001100" => ALUOP <= "001100"; 
 			when "011000" => ALUOP <= "011000"; 
 			when "011100" => ALUOP <= "011100"; 
-			when "111101" => ALUOP <= "000000"; 
-			when "111100" => ALUOP <= "000100"; 
+			when "111101" => ALUOP <= "000000"; --restore
+			when "111100" => ALUOP <= "000000"; --save
 			when others => Aluop <= "111111";
 		end case;
 	end if;

@@ -46,23 +46,40 @@ architecture Behavioral of Procesador1 is
 		);
 	END COMPONENT;
 --##################################################	
-	COMPONENT unidadControl
-	PORT(
-		op : IN std_logic_vector(1 downto 0);
-		op3 : IN std_logic_vector(5 downto 0);          
-		aluop : OUT std_logic_vector(5 downto 0)
-		);
-	END COMPONENT;
+	
+COMPONENT unidadControl is
+	Port (
+
+	  	op : in  STD_LOGIC_VECTOR (1 downto 0);
+		op2 : in STD_LOGIC_VECTOR (2 downto 0);
+		op3 : in  STD_LOGIC_VECTOR (5 downto 0);
+		icc : in STD_LOGIC_VECTOR (3 downto 0);
+		cond : in STD_LOGIC_VECTOR (3 downto 0);
+
+		rfs : out STD_LOGIC_VECTOR (1 downto 0) := "00";
+		rfd : out STD_LOGIC := '0';
+		PCs : out STD_LOGIC_VECTOR (1 downto 0) := "00";
+		DMwen : out STD_LOGIC := '0';
+		DMren : out STD_LOGIC := '0';
+		RFwen : out STD_LOGIC := '0';
+		--CLK : in STD_LOGIC;
+      aluop : out  STD_LOGIC_VECTOR (5 downto 0) := (others => '1'));
+end COMPONENT;
+
+		
 --##################################################
 	COMPONENT register_file
 	PORT(
-		RS1 : IN std_logic_vector(5 downto 0);
-		RS2 : IN std_logic_vector(5 downto 0);
-		RD : IN std_logic_vector(5 downto 0);
-		DWR : IN std_logic_vector(31 downto 0);
-		RST : IN std_logic;          
-		CRS1 : OUT std_logic_vector(31 downto 0);
-		CRS2 : OUT std_logic_vector(31 downto 0)
+				rs1 : in  STD_LOGIC_VECTOR (5 downto 0);
+           rs2 : in  STD_LOGIC_VECTOR (5 downto 0);
+           rd : in  STD_LOGIC_VECTOR (5 downto 0);
+           rst : in  STD_LOGIC;
+           dwr : in  STD_LOGIC_VECTOR (31 downto 0);
+			  wen : in STD_LOGIC;
+			  --CLK : in std_logic;
+           crs1 : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
+           crs2 : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
+			  crd : out STD_LOGIC_VECTOR (31 downto 0) := (others => '0'));
 		);
 	END COMPONENT;
 	
@@ -113,13 +130,16 @@ component Psr
 			  
            cwp : out  STD_LOGIC;
            c : out  STD_LOGIC);
+			  --tener encuenta el icc
+			  
+			  
 			  
 end component;	
 	
 
 component PsrModifier 
     Port ( 
-			  rst : in  STD_LOGIC;
+			  rst : in  STD_LOGIC;--necesitamos rst???
            crs1 : in  STD_LOGIC_VECTOR (31 downto 0);
            outMux : in  STD_LOGIC_VECTOR (31 downto 0);
            aluop : in  STD_LOGIC_VECTOR (5 downto 0);
@@ -128,6 +148,58 @@ component PsrModifier
 			  
 end component;	
 	
+----------------------------------------------------------------------------------
+	
+component SEU22 is
+    Port ( 
+				Data22 : in  STD_LOGIC_VECTOR (21 downto 0);
+            Data32 : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0'));
+end component;	
+
+component SEU30 is
+    Port ( 
+				Data30 : in  STD_LOGIC_VECTOR (29 downto 0);
+				Data32 : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0'));
+end component;
+
+component MuxCUtoPC is
+    Port ( 
+				PC30 : in  STD_LOGIC_VECTOR (31 downto 0);
+				PC22 : in  STD_LOGIC_VECTOR (31 downto 0);
+				PC : in  STD_LOGIC_VECTOR (31 downto 0);
+				AluPC : in  STD_LOGIC_VECTOR (31 downto 0);
+				PCs : in  STD_LOGIC_VECTOR (1 downto 0);
+				nPC : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0'));
+end component;
+
+component MuxDM_ALUtoRF is
+    Port ( 
+				DM : in  STD_LOGIC_VECTOR (31 downto 0);
+				AluResult : in  STD_LOGIC_VECTOR (31 downto 0);
+				PC : in  STD_LOGIC_VECTOR (31 downto 0);
+				RFs : in  STD_LOGIC_VECTOR (1 downto 0);
+				Data : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0'));
+end component;
+
+component MuxWM_15toRF is
+    Port ( 
+				rd : in  STD_LOGIC_VECTOR (5 downto 0);
+				reg : in  STD_LOGIC_VECTOR (5 downto 0);
+				rfd : in STD_LOGIC;
+				nrd : out  STD_LOGIC_VECTOR (5 downto 0) := "000000");
+end component;
+
+component DataMemory is
+    Port ( 
+				cRD : in  STD_LOGIC_VECTOR (31 downto 0);
+				AluResult : in  STD_LOGIC_VECTOR (31 downto 0);
+				WEn : in  STD_LOGIC;
+				REn : in  STD_LOGIC;
+				rst : in  STD_LOGIC;
+				CLK : in STD_LOGIC;
+				Data : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0'));
+end component;
+
 ----------------------------------------------------------------------------------
 signal aux: std_logic_vector(31 downto 0):="00000000000000000000000000000001";
 signal C_s: std_logic_vector(31 downto 0);
@@ -152,19 +224,91 @@ signal MUX_s: STD_LOGIC_VECTOR(31 downto 0);
 
 signal señalnrs1: std_logic_vector(5 downto 0);
 signal señalnrs2: std_logic_vector(5 downto 0);
-signal señalnrd:  std_logic_vector(5 downto 0);
+signal señalnrd,Nrd:  std_logic_vector(5 downto 0);
 
 signal señalcwp:   std_logic;
 signal señalncwp:  std_logic;
 
-signal señalc: std_logic;
+signal señalc, señalrfd: std_logic;
 
-signal señalnzvc : STD_LOGIC_VECTOR(3 downto 0);
+signal señalnzvc,señalicc: STD_LOGIC_VECTOR(3 downto 0);
+
+----------------------------------------------------------------------------------
+--procesador 3
+
+signal seu22aux,sum30aux,pc22aux,pc30aux,dmaux,pc22,pc30,sumToMux, muxToRf, crdaux: std_logic_vector (31 downto 0):=(others => '0');
+signal señalrfs, señalpcsource: STD_LOGIC_VECTOR(1 downto 0);
+signal wenaux, renaux, rfwenaux: std_logic;
 
 ----------------------------------------------------------------------------------
 
 begin
+-- instanciando el pc 3
+
+SEU22: SEU22 Port map ( 
+				Data22 => outIM_s(21 downto 0),--en caso de branch
+            Data32 => seu22aux
+				);
+	
+
+SEU30: SEU30 Port map ( 
+				Data30 => outIM_s(29 downto 0),--en caso de call
+				Data32 => sum30aux
+				);
+
+
+MuxCUtoPC: MuxCUtoPC Port map ( 
+											PC30 => pc30aux,
+											PC22 => pc22aux,
+											
+											PC => sumToMux,
+											AluPC => RESULT_s,
+											
+											PCs => señalpcsource
+											nPC => c_out					
+											);
+
+MuxDM_ALUtoRF: MuxDM_ALUtoRF port map ( 
+													DM => dmaux,
+													AluResult => RESULT_s,
+													PC => pc_out_s,
+													RFs => señalrfs,
+													Data => muxToRf
+);
+
+MuxWM_15toRF: MuxWM_15toRF Port map( 
+													rd => Nrd,
+													reg => "001111",-- en caso de call se guarda en o7
+													rfd => señalrfd,
+													nrd => señalnrd
+													);
+
+dataMemory: DataMemory Port map ( 
+
+													cRD => crdaux,
+													AluResult => RESULT_s,
+													WEn => wenaux,
+													REn => renaux,
+													rst => RST_D,
+													CLK => CLK_D,
+													Data => dmaux
+													);
+
+sum22: sumador port map(
+								a => sum22aux,
+								b => pc_out_s,
+								c => pc22aux	
+								);
+
+sum30: sumador PORT MAP(
+								a => aux,
+								b => pc_out_s,
+								c => pc30aux
+								);
+								
+								
 -- instanciando el pc 2
+
 ventanero: windowsManager PORT MAP(
 												rs1 => outIM_s (18 downto 14),
 												rs2 => outIM_s ( 4 downto  0),
@@ -177,20 +321,20 @@ ventanero: windowsManager PORT MAP(
 												ncwp =>señalncwp,
 												nrs1 =>señalnrs1,
 												nrs2 =>señalnrs2,
-												nrd  =>señalnrd
+												nrd  =>Nrd
 												);
 
 processorStateRegister: Psr port map (
 
-			  clk => CLK_D,
-           rst => RST_D,
-           nzvc => señalnzvc,
-           ncwp => señalncwp,
-			  
-           cwp => señalcwp,
-           c => señalc
-			  
-			  );
+											  clk => CLK_D,
+											  rst => RST_D,
+											  nzvc => señalnzvc,
+											  ncwp => señalncwp,
+											  
+											  cwp => señalcwp,
+											  c => señalc
+											  
+											  );
 
 processorStateRegisterModifier: PsrModifier port map (
 
@@ -210,7 +354,7 @@ processorStateRegisterModifier: PsrModifier port map (
 adder: sumador PORT MAP(
 								a => aux,
 								b => npc_out,
-								c => c_out
+								c => sumToMux
 								);
 			
 npc: pc port map(
@@ -226,7 +370,7 @@ pc0: pc port map(
 								clk => CLK_D,
 								pcout => pc_out_s
 								);
-								
+--								
 im: instructionMemory PORT MAP(
 								address => pc_out_s,
 								reset => RST_D,
@@ -241,19 +385,32 @@ seu0: seu port map(
 
 uc: unidadControl PORT MAP(
 								op => outIM_s(31 downto 30),
+								op2 => outIM_s(24 downto 22),
 								op3 => outIM_s(24 downto 19),
+								icc => señalicc,
+								cond => outIM_s(28 downto 25),
+
+								rfs => señalrfs,
+								rfd => señalrfd,
+								PCs => señalpcsource,
+								DMwen => wenaux,
+								DMren => renaux,
+								RFwen => rfwenaux,
 								aluop => UC_s
 								);
 
 rf: register_file PORT MAP(
-								RS1 => señalnrs1,
-								RS2 => señalnrs2,
-								RD =>  señalnrd,
+								rs1 => señalnrs1,
+								rs2 => señalnrs2,
+								rd =>  señalnrd,
 								
-								DWR => RESULT_s,
-								RST => RST_D,
-								CRS1 => CRS1_s,
-								CRS2 => CRS2_s
+								dwr => RESULT_s,
+								rst => RST_D,
+								crs1 => CRS1_s,
+								crs2 => CRS2_s,
+								
+								wen => rfwenaux,
+								crd => crdaux						
 								);
 
 

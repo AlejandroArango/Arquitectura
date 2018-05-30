@@ -8,6 +8,7 @@ entity Psr is
            ncwp : in  STD_LOGIC;
            cwp : out  STD_LOGIC;
            c : out  STD_LOGIC);
+			  --tener en cuenta icc
 end Psr;
 
 architecture Behavioral of Psr is

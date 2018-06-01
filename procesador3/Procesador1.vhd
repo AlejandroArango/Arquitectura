@@ -294,13 +294,13 @@ daataMemory: DataMemory Port map (
 													);
 
 suum22: sumador port map(
-								a => sum22aux,
+								a => seu22aux,
 								b => pc_out_s,
 								c => pc22aux	
 								);
 
 suum30: sumador PORT MAP(
-								a => aux,
+								a => sum30aux,
 								b => pc_out_s,
 								c => pc30aux
 								);
@@ -386,7 +386,7 @@ uc: ControlUnit PORT MAP(
 								op => outIM_s(31 downto 30),
 								op2 => outIM_s(24 downto 22),
 								op3 => outIM_s(24 downto 19),
-								icc => señalicc,
+								icc => señalnzvc,
 								cond => outIM_s(28 downto 25),
 
 								rfs => señalrfs,

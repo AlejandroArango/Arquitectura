@@ -39,7 +39,7 @@ begin
 				RFwen <= '0';
 				aluop <= "111111";
 				if (op2 = "010") then			
-					case(icc)is
+					case(cond)is
 						when "1000" => -- BA -- 1
 							PCs <= "01";
 						when "0000" => -- BN -- 0

@@ -47,7 +47,7 @@ architecture Behavioral of Procesador1 is
 	END COMPONENT;
 --##################################################	
 	
-COMPONENT unidadControl is
+COMPONENT ControlUnit is
 	Port (
 
 	  	op : in  STD_LOGIC_VECTOR (1 downto 0);
@@ -68,7 +68,7 @@ end COMPONENT;
 
 		
 --##################################################
-	COMPONENT register_file
+	COMPONENT RegisterFile
 	PORT(
 				rs1 : in  STD_LOGIC_VECTOR (5 downto 0);
            rs2 : in  STD_LOGIC_VECTOR (5 downto 0);
@@ -80,7 +80,6 @@ end COMPONENT;
            crs1 : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
            crs2 : out  STD_LOGIC_VECTOR (31 downto 0) := (others => '0');
 			  crd : out STD_LOGIC_VECTOR (31 downto 0) := (others => '0'));
-		);
 	END COMPONENT;
 	
 	COMPONENT mux 
@@ -90,12 +89,12 @@ end COMPONENT;
 			   mux_out : out  std_logic_vector (31 downto 0));
 	END COMPONENT;	
 	
-	COMPONENT alu
+	COMPONENT ArithmeticLogicUnit
 	PORT(
-		op1 : IN std_logic_vector(31 downto 0);
-		op2 : IN std_logic_vector(31 downto 0);
+		op_a : IN std_logic_vector(31 downto 0);
+		op_b : IN std_logic_vector(31 downto 0);
 		aluop : IN std_logic_vector(5 downto 0);
-		c : in std_logic; 
+		carry : in std_logic; 
 		result : OUT std_logic_vector(31 downto 0)
 		);
 	END COMPONENT;
@@ -236,7 +235,7 @@ signal señalnzvc,señalicc: STD_LOGIC_VECTOR(3 downto 0);
 ----------------------------------------------------------------------------------
 --procesador 3
 
-signal seu22aux,sum30aux,pc22aux,pc30aux,dmaux,pc22,pc30,sumToMux, muxToRf, crdaux: std_logic_vector (31 downto 0):=(others => '0');
+signal seu22aux,sum30aux,sum22aux,pc22aux,pc30aux,dmaux,pc22,pc30,sumToMux, muxToRf, crdaux: std_logic_vector (31 downto 0):=(others => '0');
 signal señalrfs, señalpcsource: STD_LOGIC_VECTOR(1 downto 0);
 signal wenaux, renaux, rfwenaux: std_logic;
 
@@ -245,30 +244,30 @@ signal wenaux, renaux, rfwenaux: std_logic;
 begin
 -- instanciando el pc 3
 
-SEU22: SEU22 Port map ( 
+SEUu22: SEU22 Port map ( 
 				Data22 => outIM_s(21 downto 0),--en caso de branch
             Data32 => seu22aux
 				);
 	
 
-SEU30: SEU30 Port map ( 
+SEUu30: SEU30 Port map ( 
 				Data30 => outIM_s(29 downto 0),--en caso de call
 				Data32 => sum30aux
 				);
 
 
-MuxCUtoPC: MuxCUtoPC Port map ( 
+MuuxCUtoPC: MuxCUtoPC Port map ( 
 											PC30 => pc30aux,
 											PC22 => pc22aux,
 											
 											PC => sumToMux,
 											AluPC => RESULT_s,
 											
-											PCs => señalpcsource
+											PCs => señalpcsource,
 											nPC => c_out					
 											);
 
-MuxDM_ALUtoRF: MuxDM_ALUtoRF port map ( 
+MuuxDM_ALUtoRF: MuxDM_ALUtoRF port map ( 
 													DM => dmaux,
 													AluResult => RESULT_s,
 													PC => pc_out_s,
@@ -276,14 +275,14 @@ MuxDM_ALUtoRF: MuxDM_ALUtoRF port map (
 													Data => muxToRf
 );
 
-MuxWM_15toRF: MuxWM_15toRF Port map( 
+MuuxWM_15toRF: MuxWM_15toRF Port map( 
 													rd => Nrd,
 													reg => "001111",-- en caso de call se guarda en o7
 													rfd => señalrfd,
 													nrd => señalnrd
 													);
 
-dataMemory: DataMemory Port map ( 
+daataMemory: DataMemory Port map ( 
 
 													cRD => crdaux,
 													AluResult => RESULT_s,
@@ -294,13 +293,13 @@ dataMemory: DataMemory Port map (
 													Data => dmaux
 													);
 
-sum22: sumador port map(
+suum22: sumador port map(
 								a => sum22aux,
 								b => pc_out_s,
 								c => pc22aux	
 								);
 
-sum30: sumador PORT MAP(
+suum30: sumador PORT MAP(
 								a => aux,
 								b => pc_out_s,
 								c => pc30aux
@@ -383,7 +382,7 @@ seu0: seu port map(
 								);
 
 
-uc: unidadControl PORT MAP(
+uc: ControlUnit PORT MAP(
 								op => outIM_s(31 downto 30),
 								op2 => outIM_s(24 downto 22),
 								op3 => outIM_s(24 downto 19),
@@ -399,7 +398,7 @@ uc: unidadControl PORT MAP(
 								aluop => UC_s
 								);
 
-rf: register_file PORT MAP(
+rf: RegisterFile PORT MAP(
 								rs1 => señalnrs1,
 								rs2 => señalnrs2,
 								rd =>  señalnrd,
@@ -421,12 +420,12 @@ mux0: mux PORT MAP(
 								mux_out => MUX_s
 								);
 
-alu0: alu PORT MAP(
-								op1 => CRS1_s,
-								op2 => MUX_s,
+alu0: ArithmeticLogicUnit PORT MAP(
+								op_a => CRS1_s,
+								op_b => MUX_s,
 								aluop => UC_s,
-								RESULT => RESULT_s,
-								c => señalc
+								result => RESULT_s,
+								carry => señalc
 								);
 
 Procesador1_out <= RESULT_s;
